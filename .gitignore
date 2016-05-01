@@ -1,0 +1,20 @@
+# GCC temporary files
+*.out
+*.o
+*.a
+
+# TeX temporary files
+*.aux
+*.lof
+*.log
+*.lot
+*.out
+*.toc
+*.pdf
+
+# log files
+Log
+*.log
+
+# test files
+*.txt
