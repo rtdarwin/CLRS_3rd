@@ -14,7 +14,6 @@
 #include<stdlib.h>
 #include<limits.h>
 
-# define max(x,y) (x)>(y)?x:y
 
 /* Three different methods to evaluate how to cut the rod */
 int cut_rod( int *p, int n, int *s );
@@ -34,9 +33,6 @@ int main( int argc, char **argv )
 	/* initialation */
 	int p[] = { 0, 1, 5, 8, 9, 10, 17, 17, 20, 24, 30 };
 	int rod_length = atoi( argv[2] );
-#ifndef NDEBUG
-	printf( ">>>rod_length = %d\n", rod_length );
-#endif
 	/* Use proceed to store the solution value, s to store the solution */
 	int proceed = 0;
 	int *s = (int *)malloc( sizeof(int) * ( rod_length +1 ) );
@@ -76,9 +72,6 @@ int cut_rod( int *p, int n, int *s )
 		if( q < current_proceed ){
 			q = current_proceed;
 			s[n] = i;
-#ifndef NDEBUG
-			printf( "s[%d] = %d\n", n, i );
-#endif
 		}
 	}
 
@@ -122,9 +115,6 @@ int memoized_cut_rod_aux( int *p, int n, int *s, int *r )
 			if( q < current_proceed ){
 				q = current_proceed;
 				s[n] = i;
-#ifndef NDEBUG
-				printf( "s[%d] = %d\n", n, i );
-#endif
 			}
 		}
 	}
@@ -155,9 +145,6 @@ int bottom_up_cut_rod( int *p, int n, int *s )
 			if( q < p[i] + r[j - i] ){
 				q = p[i] + r[j - i];
 				s[j] = i;
-#ifndef NDEBUG
-				printf( "s[%d] = %d\n", j, i );
-#endif
 			}
 		}
 		r[j] = q;
