@@ -3,7 +3,7 @@
  * and assumes they are given correctly.
  *
  * The first parameter is one of { -r, -m, -b },
- * stands for normal-recurrsive-method, memozied-method, bottom-up-method, repectively.
+ * stands for normal-recursive-method, memozied-method, bottom-up-method, repectively.
  * The second parameter is the number of matrix to be multiplied.
  * Then the program reads n+1 numbers from the standard input stream.
  *
@@ -16,12 +16,16 @@
 
 
 /* Three different methods to evaluate how to order the matrix order */
-void matirx_chain( int length, int *p, long **m, int **s );
-void memoized_matirx_chain( int length, int *p, long **m, int **s );
-void bottom_up_matirx_chain( int length, int *p, long **m, int **s );
 /* [begin, end] */
-void print_matirix_chain_order( int begin, int end, long **m, int **s );
-void print_matirix_chain_order_aux( int begin, int end, long **m, int **s );
+void matrix_chain( int length, int *p, long **m, int **s );
+long matrix_chain_aux( int i, int j, int *p, long **m, int **s );
+void memoized_matrix_chain( int length, int *p, long **m, int **s );
+long memoized_matrix_chain_aux( int i, int j, int *p, long **m, int **s );
+void bottom_up_matrix_chain( int length, int *p, long **m, int **s );
+/* [begin, end] */
+void print_matrix_chain_order( int begin, int end, long **m, int **s );
+void print_matrix_chain_order_aux( int begin, int end, long **m, int **s );
+
 
 int main( int argc, char **argv )
 {
@@ -51,42 +55,102 @@ int main( int argc, char **argv )
 	/* evaluate the solution */
 	switch( argv[1][1] ){
 	case 'r':
-		matirx_chain( length, p, m, s );
+		matrix_chain( length, p, m, s );
 		break;
 	case 'm':
-		memoized_matirx_chain( length, p, m, s );
+		memoized_matrix_chain( length, p, m, s );
 		break;
 	case 'b':
-		bottom_up_matirx_chain( length, p, m, s );
+		bottom_up_matrix_chain( length, p, m, s );
 		break;
 	default:
 		exit( EXIT_FAILURE );
 	}
 
 	/* print the solution */
-	print_matirix_chain_order( 1, length, m, s );
+	print_matrix_chain_order( 1, length, m, s );
 	return 0;
 }
 
 
-void matirx_chain( int length, int *p, long **m, int **s )
+// ----------------------- Normal Recursive -----------------------------------
+void matrix_chain( int length, int *p, long **m, int **s )
 {
+	m[1][length] = matrix_chain_aux( 1, length, p, m, s );
 }
 
 
-void memoized_matirx_chain( int length, int *p, long **m, int **s )
+long matrix_chain_aux( int i, int j, int *p, long **m, int **s )
 {
+	/* acutally, there is no need to store value in m[i][j] */
+	if( i == j )
+		m[i][j] = 0;
+	else
+		m[i][j] = LONG_MAX;
+
+	for( int k = i; k <= j - 1; k++ ){
+		long t = matrix_chain_aux( i, k, p, m, s )
+			+ matrix_chain_aux( k + 1, j, p, m, s )
+			+ p[i-1] * p[k] * p[j];
+		if( m[i][j] > t ){
+			m[i][j] = t;
+			s[i][j] = k;
+		}
+	}
+	return m[i][j];
 }
 
 
-void bottom_up_matirx_chain( int n, int *p, long **m, int **s )
+// ----------------------- Memoized Recursive --------------------------------
+void memoized_matrix_chain( int length, int *p, long **m, int **s )
+{
+	/*
+	 * Must initialize m[i][j] at first
+	 * because the memoized recursive method is top-down
+	 */
+	for( int i = 0; i <= length; i++ ){
+		for( int j = 0; j <= length; j++ ){
+			m[i][j] = LONG_MAX;
+		}
+	}
+
+	m[1][length] = memoized_matrix_chain_aux( 1, length, p, m, s );
+}
+
+
+long memoized_matrix_chain_aux( int i, int j, int *p, long **m, int **s )
+{
+	if( m[i][j] < LONG_MAX )
+		return m[i][j];
+
+	if( i == j ){
+		m[i][j] = 0;
+		return 0;
+	}
+
+	for( int k = i; k <= j - 1; k++ ){
+		long t = memoized_matrix_chain_aux( i, k, p, m, s )
+			+ memoized_matrix_chain_aux( k + 1, j, p, m, s )
+			+ p[i-1] * p[k] * p[j];
+		if( m[i][j] > t ){
+			m[i][j] = t;
+			s[i][j] = k;
+		}
+	}
+
+	return m[i][j];
+}
+
+
+// ----------------------- Bottom-up -----------------------------------------
+void bottom_up_matrix_chain( int n, int *p, long **m, int **s )
 {
 	for( int i = 0; i <= n; i++ )
 		m[i][i] = 0;
 	for( int l = 2; l <= n; l++ ){
 		for( int i = 1; i <= n - l + 1; i++ ){
 			int j = i + l - 1;
-			m[i][j] = INT_MAX;
+			m[i][j] = LONG_MAX;
 			for( int k = i; k <= j - 1; k++ ){
 				long q =  m[i][k] + m[k+1][j] + p[i-1] * p[k] * p[j];
 				if( m[i][j] > q ){
@@ -96,37 +160,26 @@ void bottom_up_matirx_chain( int n, int *p, long **m, int **s )
 			}
 		}
 	}
-#ifndef NDEBUG
-	for( int i = 0; i <= n; i++ ){
-		for( int j = 0; j <= n; j++ ){
-			printf( "m[%d][%d] = %-8ld  ", i, j, m[i][j] );
-			printf( "s[%d][%d] = %-8d\n", i, j, s[i][j] );
-		}
-		putchar( '\n' );
-		putchar( '\n' );
-	}
-	printf( "DONE\n" );
-#endif
-
 }
 
 
-void print_matirix_chain_order( int begin, int end, long **m, int **s )
+// ----------------------- Print result --------------------------------------
+void print_matrix_chain_order( int begin, int end, long **m, int **s )
 {
 	printf( "%ld: ( ", m[begin][end] );
-	print_matirix_chain_order_aux( begin, end, m, s );
+	print_matrix_chain_order_aux( begin, end, m, s );
 	putchar( '\n' );
 }
 
 
-void print_matirix_chain_order_aux( int begin, int end, long **m, int **s )
+void print_matrix_chain_order_aux( int begin, int end, long **m, int **s )
 {
 	if( begin == end ){
 		printf( " A[%d] ", begin );
 	} else {
 		putchar( '(' );
-		print_matirix_chain_order_aux( begin, s[begin][end], m, s );
-		print_matirix_chain_order_aux( s[begin][end] + 1, end, m, s );
+		print_matrix_chain_order_aux( begin, s[begin][end], m, s );
+		print_matrix_chain_order_aux( s[begin][end] + 1, end, m, s );
 		putchar( ')' );
 	}
 }
