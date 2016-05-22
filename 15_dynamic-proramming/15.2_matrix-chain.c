@@ -82,7 +82,11 @@ void matrix_chain( int length, int *p, long **m, int **s )
 
 long matrix_chain_aux( int i, int j, int *p, long **m, int **s )
 {
-	/* acutally, there is no need to store value in m[i][j] */
+	/* Acutally, there is no need to store value in m[i][j],
+	 *   using a temporary variable to store and then reuturn, is enough.
+	 * Becaue this function is simple recursive one,
+	 *   it don't use any result evaluated before.
+	 */
 	if( i == j )
 		m[i][j] = 0;
 	else
